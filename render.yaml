@@ -1,0 +1,39 @@
+# Render manifest for automatic service + database creation
+#
+# To use:
+# 1. Open Render dashboard > New > Import from GitHub and choose this repository.
+# 2. Render will detect this manifest and offer to create the listed services/resources.
+# 3. After creation, set sensitive environment variables (JWT_SECRET, ADMIN_CREATION_SECRET)
+#    in the Render service settings — do NOT commit secrets to this file.
+
+services:
+  - type: web
+    name: kta-pmii-backend
+    env: node
+    repo: https://github.com/kanza99/kta-pmii
+    branch: main
+    plan: free
+    buildCommand: cd kta-backend && npm install
+    startCommand: cd kta-backend && npm start
+    envVars:
+      - key: DATABASE_URL
+        # Leave value blank so Render wires the managed DB automatically, or fill with an external DB URL
+        value: ""
+      - key: JWT_SECRET
+        value: ""
+      - key: ADMIN_CREATION_SECRET
+        value: ""
+
+databases:
+  - name: kta-pmii-db
+    engine: postgres
+    plan: free
+
+# Notes:
+# - After importing this manifest Render will create a managed Postgres instance named
+#   `kta-pmii-db` and a web service `kta-pmii-backend` that points to the `kta-backend`
+#   folder in this repo. Render will provide the database connection string. Edit the
+#   web service's Environment settings and set `DATABASE_URL` to the provided Postgres
+#   connection string. Then add `JWT_SECRET` and `ADMIN_CREATION_SECRET` values.
+# - If you prefer to create the DB manually in Render, set `DATABASE_URL` directly in
+#   the web service envVars (either in this file or in the dashboard) to the DB URL.
