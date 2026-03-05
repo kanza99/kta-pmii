@@ -1,35 +1,562 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="icon" href="/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <meta
-      name="description"
-      content="Web site created using @vitejs/plugin-react"
-    />
-    <link rel="apple-touch-icon" href="/logo192.png" />
-    <!--
-      manifest.json provides metadata used when your web app is installed on a
-      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
-    -->
-    <link rel="manifest" href="/manifest.json" />
-    <title>React App</title>
-  </head>
-  <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
-    <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database PMII Martapura</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome untuk Ikon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Chart.js untuk grafik -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
+        // Firebase config - GANTI DENGAN CONFIG ANDA DARI FIREBASE CONSOLE
+        // Lihat FIREBASE_SETUP.md untuk instruksi lengkap
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
 
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
-    -->
-  </body>
-  <script type="module" src="/src/index.jsx"></script>
+        try {
+            const app = initializeApp(firebaseConfig);
+            const db = getFirestore(app);
+
+            window.db = db;
+            window.collection = collection;
+            window.addDoc = addDoc;
+            window.getDocs = getDocs;
+            window.doc = doc;
+            window.updateDoc = updateDoc;
+            window.deleteDoc = deleteDoc;
+            window.firebaseReady = true;
+            console.log("Firebase initialized successfully");
+        } catch (error) {
+            console.error("Firebase initialization error:", error);
+            window.firebaseReady = false;
+            alert("⚠️ Firebase config error. Baca FIREBASE_SETUP.md untuk setup Firebase.");
+        }
+    </script>
+    <style>
+        :root {
+            --pmii-green: #006837;
+            --pmii-dark: #004d29;
+        }
+        body {
+            background-color: #f4f6f9;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .sidebar {
+            height: 100vh;
+            background-color: var(--pmii-green);
+            color: white;
+            position: fixed;
+            width: 250px;
+            padding-top: 20px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        }
+        .sidebar a {
+            color: white;
+            text-decoration: none;
+            display: block;
+            padding: 15px 20px;
+            transition: 0.3s;
+            border-left: 5px solid transparent;
+        }
+        .sidebar a:hover, .sidebar a.active {
+            background-color: var(--pmii-dark);
+            border-left: 5px solid white;
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .card-header {
+            background-color: var(--pmii-green);
+            color: white;
+            font-weight: bold;
+        }
+        .status-aktif { color: #28a745; font-weight: bold; }
+        .status-tidak-aktif { color: #dc3545; font-weight: bold; }
+        .status-demisioner { color: #ffc107; font-weight: bold; }
+        .finance-in { color: #28a745; }
+        .finance-out { color: #dc3545; }
+        .logo-area {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid rgba(255,255,255,0.1);
+            padding-bottom: 20px;
+        }
+        .logo-area h5 {
+            margin: 0;
+            font-weight: bold;
+        }
+        .section-view { display: none; }
+        .section-view.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .loading { color: #999; font-style: italic; }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo-area">
+            <h5>PMII MARTAPURA</h5>
+            <small>Database Terpadu</small>
+        </div>
+        <a href="#" onclick="showSection('dashboard')" class="active" id="nav-dashboard"><i class="fas fa-home me-2"></i> Dashboard</a>
+        <a href="#" onclick="showSection('anggota')" id="nav-anggota"><i class="fas fa-users me-2"></i> Data Anggota</a>
+        <a href="#" onclick="showSection('keuangan')" id="nav-keuangan"><i class="fas fa-wallet me-2"></i> Data Keuangan</a>
+        <a href="#" onclick="showSection('input-anggota')" id="nav-input-anggota"><i class="fas fa-user-plus me-2"></i> Input Anggota</a>
+        <a href="#" onclick="showSection('input-keuangan')" id="nav-input-keuangan"><i class="fas fa-money-bill me-2"></i> Input Keuangan</a>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        
+        <!-- DASHBOARD -->
+        <div id="dashboard" class="section-view active">
+            <h2 class="mb-4"><i class="fas fa-tachometer-alt me-2"></i>Dashboard Rangkuman</h2>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card text-white bg-success mb-3">
+                        <div class="card-header">Total Anggota Aktif</div>
+                        <div class="card-body">
+                            <h1 class="card-title" id="dash-total-aktif">-</h1>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-white bg-primary mb-3">
+                        <div class="card-header">Total Pemasukan</div>
+                        <div class="card-body">
+                            <h1 class="card-title" id="dash-total-masuk">-</h1>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-white bg-danger mb-3">
+                        <div class="card-header">Total Pengeluaran</div>
+                        <div class="card-body">
+                            <h1 class="card-title" id="dash-total-keluar">-</h1>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mt-4">
+                <div class="card-header">Statistik Kepengurusan</div>
+                <div class="card-body">
+                    <canvas id="orgChart" style="max-height: 300px;"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- DATA ANGGOTA -->
+        <div id="anggota" class="section-view">
+            <h2 class="mb-4"><i class="fas fa-users me-2"></i>Data Anggota</h2>
+            <div class="card">
+                <div class="card-body">
+                    <input type="text" id="searchAnggota" class="form-control mb-3" placeholder="Cari nama atau kampus..." onkeyup="renderAnggotaTable()">
+                    <div id="loadingAnggota" class="loading">Loading data...</div>
+                    <table class="table table-bordered table-hover" id="tableAnggota" style="display:none;">
+                        <thead class="table-light">
+                            <tr>
+                                <th>No</th>
+                                <th>Nama Lengkap</th>
+                                <th>Kampus</th>
+                                <th>Jenjang Kaderisasi</th>
+                                <th>Jenjang Organisasi</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableAnggotaBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- DATA KEUANGAN -->
+        <div id="keuangan" class="section-view">
+            <h2 class="mb-4"><i class="fas fa-wallet me-2"></i>Data Keuangan</h2>
+            <div class="card">
+                <div class="card-body">
+                    <div id="loadingKeuangan" class="loading">Loading data...</div>
+                    <table class="table table-bordered table-hover" id="tableKeuangan" style="display:none;">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Tanggal</th>
+                                <th>Keterangan</th>
+                                <th>Jenis</th>
+                                <th>Nominal</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableKeuanganBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- INPUT ANGGOTA -->
+        <div id="input-anggota" class="section-view">
+            <h2 class="mb-4"><i class="fas fa-user-plus me-2"></i>Input Data Anggota Baru</h2>
+            <div class="card">
+                <div class="card-body">
+                    <form id="formAnggota">
+                        <div class="mb-3">
+                            <label class="form-label">Nama Lengkap</label>
+                            <input type="text" class="form-control" id="inputNama" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Nama Kampus / Perguruan Tinggi</label>
+                            <input type="text" class="form-control" id="inputKampus" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Jenjang Kaderisasi</label>
+                                <select class="form-select" id="inputKaderisasi">
+                                    <option value="MAPABA">MAPABA</option>
+                                    <option value="PKD">PKD</option>
+                                    <option value="PKL">PKL</option>
+                                    <option value="PKN">PKN</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Jenjang Organisasi</label>
+                                <select class="form-select" id="inputOrganisasi">
+                                    <option value="Rayon">Pengurus Rayon (Fakultas)</option>
+                                    <option value="Komisariat">Pengurus Komisariat (Kampus)</option>
+                                    <option value="PC">Pengurus Cabang (Kabupaten)</option>
+                                    <option value="PKC">Pengurus Koordinasi Cabang (Provinsi)</option>
+                                    <option value="PB">Pengurus Besar (Nasional)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Status Keaktifan</label>
+                            <select class="form-select" id="inputStatus">
+                                <option value="Aktif">Aktif</option>
+                                <option value="Tidak Aktif">Tidak Aktif</option>
+                                <option value="Demisioner">Demisioner</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-success"><i class="fas fa-save me-2"></i>Simpan Data</button>
+                        <button type="button" class="btn btn-secondary" onclick="showSection('anggota')">Batal</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- INPUT KEUANGAN -->
+        <div id="input-keuangan" class="section-view">
+            <h2 class="mb-4"><i class="fas fa-money-bill me-2"></i>Input Transaksi Keuangan</h2>
+            <div class="card">
+                <div class="card-body">
+                    <form id="formKeuangan">
+                        <div class="mb-3">
+                            <label class="form-label">Tanggal</label>
+                            <input type="date" class="form-control" id="inputTanggal" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Keterangan</label>
+                            <input type="text" class="form-control" id="inputKet" placeholder="Contoh: Iuran Anggota, Sewa Gedung" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Jenis Transaksi</label>
+                            <select class="form-select" id="inputJenis">
+                                <option value="Masuk">Masuk (Pemasukan)</option>
+                                <option value="Keluar">Keluar (Pengeluaran)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Nominal (Rp)</label>
+                            <input type="number" class="form-control" id="inputNominal" required>
+                        </div>
+                        <button type="submit" class="btn btn-success"><i class="fas fa-save me-2"></i>Simpan Transaksi</button>
+                        <button type="button" class="btn btn-secondary" onclick="showSection('keuangan')">Batal</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let anggotaData = [];
+        let keuanganData = [];
+        let chartInstance = null;
+
+        // Fungsi navigasi
+        function showSection(sectionId) {
+            if (!window.firebaseReady) {
+                alert("⚠️ Firebase belum di-setup. Silakan atur Firebase terlebih dahulu (FIREBASE_SETUP.md)");
+                return;
+            }
+
+            document.querySelectorAll('.section-view').forEach(section => section.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+            document.querySelectorAll('.sidebar a').forEach(link => link.classList.remove('active'));
+            document.getElementById('nav-' + sectionId).classList.add('active');
+            
+            if (sectionId === 'dashboard') updateDashboard();
+            if (sectionId === 'anggota') loadAnggota();
+            if (sectionId === 'keuangan') loadKeuangan();
+        }
+
+        // Load data dari Firestore
+        async function loadAnggota() {
+            if (!window.db) return;
+            try {
+                document.getElementById('loadingAnggota').style.display = 'block';
+                document.getElementById('tableAnggota').style.display = 'none';
+                
+                const querySnapshot = await getDocs(collection(db, "anggota"));
+                anggotaData = [];
+                querySnapshot.forEach((doc) => {
+                    anggotaData.push({ id: doc.id, ...doc.data() });
+                });
+                
+                document.getElementById('loadingAnggota').style.display = 'none';
+                document.getElementById('tableAnggota').style.display = 'table';
+                renderAnggotaTable();
+            } catch (error) {
+                console.error("Error loading anggota:", error);
+                document.getElementById('loadingAnggota').innerHTML = `<span class="text-danger">Error: ${error.message}</span>`;
+            }
+        }
+
+        async function loadKeuangan() {
+            if (!window.db) return;
+            try {
+                document.getElementById('loadingKeuangan').style.display = 'block';
+                document.getElementById('tableKeuangan').style.display = 'none';
+                
+                const querySnapshot = await getDocs(collection(db, "keuangan"));
+                keuanganData = [];
+                querySnapshot.forEach((doc) => {
+                    keuanganData.push({ id: doc.id, ...doc.data() });
+                });
+                
+                document.getElementById('loadingKeuangan').style.display = 'none';
+                document.getElementById('tableKeuangan').style.display = 'table';
+                renderKeuanganTable();
+            } catch (error) {
+                console.error("Error loading keuangan:", error);
+                document.getElementById('loadingKeuangan').innerHTML = `<span class="text-danger">Error: ${error.message}</span>`;
+            }
+        }
+
+        // Render tabel
+        function renderAnggotaTable() {
+            const tbody = document.getElementById('tableAnggotaBody');
+            const search = document.getElementById('searchAnggota').value.toLowerCase();
+            tbody.innerHTML = '';
+            
+            const filtered = anggotaData.filter(item => 
+                item.nama.toLowerCase().includes(search) || 
+                item.kampus.toLowerCase().includes(search)
+            );
+            
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Tidak ada data</td></tr>';
+                return;
+            }
+            
+            filtered.forEach((item, index) => {
+                const statusClass = `status-${item.status.toLowerCase().replace(' ', '-')}`;
+                const row = `<tr>
+                    <td>${index + 1}</td>
+                    <td>${item.nama}</td>
+                    <td>${item.kampus}</td>
+                    <td>${item.kaderisasi}</td>
+                    <td>${item.organisasi}</td>
+                    <td class="${statusClass}">${item.status}</td>
+                    <td>
+                        <button class="btn btn-sm btn-danger" onclick="deleteAnggota('${item.id}')">Hapus</button>
+                    </td>
+                </tr>`;
+                tbody.innerHTML += row;
+            });
+        }
+
+        function renderKeuanganTable() {
+            const tbody = document.getElementById('tableKeuanganBody');
+            tbody.innerHTML = '';
+            
+            if (keuanganData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Tidak ada data</td></tr>';
+                return;
+            }
+            
+            keuanganData.forEach((item, index) => {
+                const financeClass = item.jenis === 'Masuk' ? 'finance-in' : 'finance-out';
+                const row = `<tr>
+                    <td>${item.tanggal}</td>
+                    <td>${item.ket}</td>
+                    <td class="${financeClass}"><strong>${item.jenis}</strong></td>
+                    <td>Rp ${parseInt(item.nominal).toLocaleString()}</td>
+                    <td>
+                        <button class="btn btn-sm btn-danger" onclick="deleteKeuangan('${item.id}')">Hapus</button>
+                    </td>
+                </tr>`;
+                tbody.innerHTML += row;
+            });
+        }
+
+        // Update dashboard
+        async function updateDashboard() {
+            if (!window.db) return;
+            
+            try {
+                // Load fresh data
+                const angSnapshot = await getDocs(collection(db, "anggota"));
+                const keuSnapshot = await getDocs(collection(db, "keuangan"));
+                
+                anggotaData = [];
+                keuanganData = [];
+                
+                angSnapshot.forEach(doc => anggotaData.push({ id: doc.id, ...doc.data() }));
+                keuSnapshot.forEach(doc => keuanganData.push({ id: doc.id, ...doc.data() }));
+                
+                const aktif = anggotaData.filter(a => a.status === 'Aktif').length;
+                document.getElementById('dash-total-aktif').textContent = aktif;
+                
+                const masuk = keuanganData.filter(k => k.jenis === 'Masuk').reduce((sum, k) => sum + parseInt(k.nominal || 0), 0);
+                document.getElementById('dash-total-masuk').textContent = 'Rp ' + masuk.toLocaleString();
+                
+                const keluar = keuanganData.filter(k => k.jenis === 'Keluar').reduce((sum, k) => sum + parseInt(k.nominal || 0), 0);
+                document.getElementById('dash-total-keluar').textContent = 'Rp ' + keluar.toLocaleString();
+                
+                // Chart
+                const ctx = document.getElementById('orgChart').getContext('2d');
+                if (chartInstance) chartInstance.destroy();
+                chartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Aktif', 'Tidak Aktif', 'Demisioner'],
+                        datasets: [{
+                            label: 'Jumlah Anggota',
+                            data: [
+                                anggotaData.filter(a => a.status === 'Aktif').length,
+                                anggotaData.filter(a => a.status === 'Tidak Aktif').length,
+                                anggotaData.filter(a => a.status === 'Demisioner').length
+                            ],
+                            backgroundColor: ['#28a745', '#dc3545', '#ffc107']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: { stepSize: 1 }
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error("Error updating dashboard:", error);
+                alert("Error loading dashboard: " + error.message);
+            }
+        }
+
+        // Form submit
+        document.getElementById('formAnggota').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            if (!window.db) return alert("Firebase belum siap");
+            
+            try {
+                const data = {
+                    nama: document.getElementById('inputNama').value,
+                    kampus: document.getElementById('inputKampus').value,
+                    kaderisasi: document.getElementById('inputKaderisasi').value,
+                    organisasi: document.getElementById('inputOrganisasi').value,
+                    status: document.getElementById('inputStatus').value,
+                    createdAt: new Date().toISOString()
+                };
+                
+                await addDoc(collection(db, "anggota"), data);
+                alert("✓ Data anggota berhasil disimpan");
+                this.reset();
+                showSection('anggota');
+            } catch (error) {
+                alert("Error: " + error.message);
+            }
+        });
+
+        document.getElementById('formKeuangan').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            if (!window.db) return alert("Firebase belum siap");
+            
+            try {
+                const data = {
+                    tanggal: document.getElementById('inputTanggal').value,
+                    ket: document.getElementById('inputKet').value,
+                    jenis: document.getElementById('inputJenis').value,
+                    nominal: document.getElementById('inputNominal').value,
+                    createdAt: new Date().toISOString()
+                };
+                
+                await addDoc(collection(db, "keuangan"), data);
+                alert("✓ Transaksi keuangan berhasil disimpan");
+                this.reset();
+                showSection('keuangan');
+            } catch (error) {
+                alert("Error: " + error.message);
+            }
+        });
+
+        // Delete
+        async function deleteAnggota(id) {
+            if (!confirm('Yakin hapus data ini?')) return;
+            if (!window.db) return;
+            
+            try {
+                await deleteDoc(doc(db, "anggota", id));
+                alert("✓ Data berhasil dihapus");
+                loadAnggota();
+            } catch (error) {
+                alert("Error: " + error.message);
+            }
+        }
+
+        async function deleteKeuangan(id) {
+            if (!confirm('Yakin hapus transaksi ini?')) return;
+            if (!window.db) return;
+            
+            try {
+                await deleteDoc(doc(db, "keuangan", id));
+                alert("✓ Transaksi berhasil dihapus");
+                loadKeuangan();
+            } catch (error) {
+                alert("Error: " + error.message);
+            }
+        }
+
+        // Check Firebase on load
+        window.onload = function() {
+            if (!window.firebaseReady) {
+                alert("⚠️ PENTING: Firebase belum dikonfigurasi!\n\nBaca file FIREBASE_SETUP.md untuk instruksi setup.");
+            }
+        };
+    </script>
+</body>
 </html>
