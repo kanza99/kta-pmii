@@ -1,70 +1,147 @@
-# GitHub Codespaces ♥️ React
+# 📱 Database PMII Martapura
 
-Welcome to your shiny new Codespace running React! We've got everything fired up and running for you to explore React.
+Aplikasi web untuk mengelola data anggota dan keuangan organisasi PMII Martapura dengan backend Firebase Firestore.
 
-You've got a blank canvas to work on from a git perspective as well. There's a single initial commit with the what you're seeing right now - where you go from here is up to you!
+## ✨ Fitur Utama
+- **Dashboard** - Ringkasan statistik anggota dan keuangan
+- **Data Anggota** - View, cari, hapus data anggota dengan filter
+- **Data Keuangan** - Kelola transaksi masuk/keluar
+- **Input Form** - Tambah data anggota dan keuangan baru
+- **Grafik Statistik** - Visualisasi jumlah anggota per status
+- **Real-time Sync** - Data tersinkronisasi dengan Firebase Firestore
 
-Everything you do here is contained within this one codespace. There is no repository on GitHub yet. If and when you’re ready you can click "Publish Branch" and we’ll create your repository and push up your project. If you were just exploring then and have no further need for this code then you can simply delete your codespace and it's gone forever.
+## 🚀 Quick Start
 
-This project was bootstrapped for you with [Vite](https://vitejs.dev/).
+### 1. **Aktifkan GitHub Pages** (Opsional, untuk akses publik)
+- Pergi ke repo Settings > Pages
+- Pilih branch `main`, folder `/(root)`
+- Link publik: `https://kanza99.github.io/kta-pmii/`
 
-## Available Scripts
+### 2. **Setup Firebase** (WAJIB untuk data berfungsi)
+Ikuti instruksi di [FIREBASE_SETUP.md](FIREBASE_SETUP.md):
+1. Buat project Firebase
+2. Aktifkan Firestore Database
+3. Copy config credentials
+4. Isi placeholder di file `index.html` (baris ~21)
 
-In the project directory, you can run:
+### 3. **Jalankan Aplikasi**
+- Buka `index.html` di browser
+- Atau hosting di server dengan live server
 
-### `npm start`
+## 📁 Struktur File
+```
+/
+├── index.html              # Main app (standalone)
+├── README.md              # Dokumentasi ini
+├── FIREBASE_SETUP.md      # Instruksi setup Firebase
+└── .env.example           # Template environment variables
+```
 
-We've already run this for you in the `Codespaces: server` terminal window below. If you need to stop the server for any reason you can just run `npm start` again to bring it back online.
+## 🔧 Firebase Configuration
+**Lokasi config:** `index.html` (baris ~21-27)
 
-Runs the app in the development mode.\
-Open [http://localhost:3000/](http://localhost:3000/) in the built-in Simple Browser (`Cmd/Ctrl + Shift + P > Simple Browser: Show`) to view your running application.
+```javascript
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+};
+```
 
-The page will reload automatically when you make changes.\
-You may also see any lint errors in the console.
+## 📋 Koleksi Firestore
 
-### `npm test`
+### `anggota` collection
+```json
+{
+  "nama": "Nama Anggota",
+  "kampus": "Nama Universitas",
+  "kaderisasi": "MAPABA|PKD|PKL|PKN",
+  "organisasi": "Rayon|Komisariat|PC|PKC|PB",
+  "status": "Aktif|Tidak Aktif|Demisioner",
+  "createdAt": "timestamp"
+}
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### `keuangan` collection
+```json
+{
+  "tanggal": "2024-03-05",
+  "ket": "Iuran Anggota",
+  "jenis": "Masuk|Keluar",
+  "nominal": "500000",
+  "createdAt": "timestamp"
+}
+```
 
-### `npm run build`
+## 🛠️ Teknologi
+- **Frontend:** HTML5, Bootstrap 5, Chart.js
+- **Backend:** Firebase Firestore
+- **Icons:** Font Awesome 6
+- **Hosting:** GitHub Pages + Firebase
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## 📝 Cara Penggunaan
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Dashboard
+- Lihat ringkasan jumlah anggota aktif
+- Melihat total pemasukan dan pengeluaran
+- Lihat grafik statistik status anggota
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Input Anggota
+- Isi form dengan data anggota baru
+- Jenjang: MAPABA, PKD, PKL, PKN
+- Organisasi: Rayon, Komisariat, PC, PKC, PB
+- Status: Aktif, Tidak Aktif, Demisioner
 
-## Learn More
+### Input Keuangan
+- Catat transaksi masuk (pemasukan) atau keluar (pengeluaran)
+- Isi tanggal, keterangan, jenis, nominal
+- Data otomatis tersimpan ke Firestore
 
-You can learn more in the [Vite documentation](https://vitejs.dev/guide/).
+### Data Tables
+- **Search:** Cari anggota berdasarkan nama atau kampus
+- **Delete:** Hapus data (hanya anggota, fitur edit sedang development)
+- **Real-time:** Data diupdate otomatis dari Firestore
 
-To learn Vitest, a Vite-native testing framework, go to [Vitest documentation](https://vitest.dev/guide/)
+## ⚠️ Penting
+- **Firebase HARUS di-setup** agar aplikasi berfungsi penuh
+- **Keamanan:** Setup Firestore dengan security rules yang tepat
+- **Backup:** Backup data Firestore secara berkala
+- **Browser:** Use modern browser (Chrome, Firefox, Edge, Safari)
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## 🔐 Firestore Security Rules (Basic)
+```
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
+```
+⚠️ Gunakan rules yang lebih strict untuk production!
 
-### Code Splitting
+## 🐛 Troubleshooting
 
-This section has moved here: [https://sambitsahoo.com/blog/vite-code-splitting-that-works.html](https://sambitsahoo.com/blog/vite-code-splitting-that-works.html)
+### Firebase config error?
+- Cek di browser console (F12)
+- Pastikan semua placeholder di `index.html` sudah diganti
+- Baca [FIREBASE_SETUP.md](FIREBASE_SETUP.md)
 
-### Analyzing the Bundle Size
+### Data tidak tersimpan?
+- Cek Firestore
+collection permissions
+- Cek browser network tab untuk error
 
-This section has moved here: [https://github.com/btd/rollup-plugin-visualizer#rollup-plugin-visualizer](https://github.com/btd/rollup-plugin-visualizer#rollup-plugin-visualizer)
+### Halaman blank?
+- Cek file `index.html` terbuka?
+- Enable JavaScript di browser
+- Check console untuk error message
 
-### Making a Progressive Web App
-
-This section has moved here: [https://dev.to/hamdankhan364/simplifying-progressive-web-app-pwa-development-with-vite-a-beginners-guide-38cf](https://dev.to/hamdankhan364/simplifying-progressive-web-app-pwa-development-with-vite-a-beginners-guide-38cf)
-
-### Advanced Configuration
-
-This section has moved here: [https://vitejs.dev/guide/build.html#advanced-base-options](https://vitejs.dev/guide/build.html#advanced-base-options)
-
-### Deployment
-
-This section has moved here: [https://vitejs.dev/guide/build.html](https://vitejs.dev/guide/build.html)
-
-### Troubleshooting
-
-This section has moved here: [https://vitejs.dev/guide/troubleshooting.html](https://vitejs.dev/guide/troubleshooting.html)
+## 📞 Contact & Support
+- Baca dokumentasi [FIREBASE_SETUP.md](FIREBASE_SETUP.md)
+- Check error message di browser console (F12)
+- Periksa Firebase Console untuk debug
