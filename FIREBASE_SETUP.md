@@ -100,15 +100,61 @@ Kemudian save file dan reload browser.
 
 ---
 
-## 🔐 Security Rules (Production)
+## 🔐 Security Rules
 
-Untuk production, setup security rules ini di Firebase Console > Firestore > Rules:
+### ⚠️ MASALAH: Error "Missing or insufficient permissions"
+
+Jika Anda mendapat error ini saat upload data, berarti **Security Rules di Firebase belum dikonfigurasi untuk public access**.
+
+---
+
+### ✅ SOLUSI: Update Security Rules
+
+**LANGKAH-LANGKAH:**
+
+1. **Buka Firebase Console:**
+   - Pergi ke: https://console.firebase.google.com/
+   - Pilih project: **database-pmii-martapura**
+
+2. **Buka Firestore Rules:**
+   - Menu kiri > Firestore Database
+   - Klik tab "Rules" (di sebelah "Data")
+
+3. **Ganti dengan Rules untuk Public Access:**
 
 ```javascript
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Izinkan reading dan writing hanya untuk user yang login
+    // Izinkan semua orang baca dan tulis (untuk development/testing)
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}
+```
+
+4. **Publish Rules:**
+   - Klik tombol "Publish" / "Update"
+   - Tunggu konfirmasi selesai (biasanya 1-2 menit)
+
+5. **Test Aplikasi:**
+   - Kembali ke aplikasi
+   - Refresh halaman (F5)
+   - Coba input data anggota/keuangan lagi
+   - Seharusnya berhasil sekarang ✅
+
+---
+
+### 🔒 Security Rules untuk PRODUCTION (dengan Password)
+
+Jika ingin lebih aman dengan authentication:
+
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Hanya user yang login bisa baca/tulis
     match /{document=**} {
       allow read, write: if request.auth != null;
     }
@@ -116,7 +162,27 @@ service cloud.firestore {
 }
 ```
 
-⚠️ **PENTING:** Jika aplikasi publik tanpa auth, gunakan rules yang lebih permissive atau setup authentication terlebih dahulu.
+**Catatan:** Untuk menggunakan ini, aplikasi harus punya user login/authentication terlebih dahulu.
+
+---
+
+### 🔓 Rules untuk Testing (Development)
+
+Jika hanya untuk testing/development publik:
+
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow all reads and writes (development only!)
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}
+```
+
+⚠️ **HATI-HATI:** Rules ini sangat permissive. Hanya gunakan untuk testing!
 
 ---
 
