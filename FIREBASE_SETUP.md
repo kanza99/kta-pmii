@@ -1,55 +1,155 @@
 # Setup Firebase untuk Database PMII Martapura
 
-## Langkah 1: Buat Project Firebase
-1. Pergi ke https://console.firebase.google.com/
-2. Klik "Create Project"
-3. Nama: `Database PMII Martapura` (atau nama lain)
-4. Klik "Create"
+## ✅ STATUS: FIREBASE SUDAH SETUP!
 
-## Langkah 2: Aktifkan Firestore Database
-1. Di Firebase Console, pilih project Anda
-2. Menu kiri > Firestore Database
-3. Klik "Create Database"
-4. Mode: **Production mode** (atau testing jika untuk development)
-5. Lokasi: Sesuaikan sesuai kebutuhan
-6. Klik "Create"
+Project Firebase: **database-pmii-martapura** sudah dikonfigurasi dan siap digunakan.
 
-## Langkah 3: Ambil Config Firebase
-1. Di Dashboard Firebase, klik icon gear (Settings)
-2. Pilih tab "General"
-3. Scroll ke bagian "Your apps"
-4. Klik Web app (icon `</>`), atau "Add app" jika belum ada
-5. Copy credential yang muncul
+### Informasi Project
+- **Project ID:** database-pmii-martapura
+- **Auth Domain:** database-pmii-martapura.firebaseapp.com
+- **Storage Bucket:** database-pmii-martapura.firebasestorage.app
 
-## Langkah 4: Simpan Config ke Project
-1. Buat file `.env.local` di root project:
-   ```
-   VITE_FIREBASE_API_KEY=YOUR_API_KEY
-   VITE_FIREBASE_AUTH_DOMAIN=YOUR_PROJECT.firebaseapp.com
-   VITE_FIREBASE_PROJECT_ID=YOUR_PROJECT_ID
-   VITE_FIREBASE_STORAGE_BUCKET=YOUR_PROJECT.appspot.com
-   VITE_FIREBASE_MESSAGING_SENDER_ID=YOUR_SENDER_ID
-   VITE_FIREBASE_APP_ID=YOUR_APP_ID
-   ```
-2. Ganti placeholder dengan nilai dari Firebase Console
+---
 
-## Langkah 5: Update `index.html`
-Buka `index.html`, cari baris ~13-21 (script Firebase), ganti:
+## 📋 Firestore Database
+
+### Collections yang tersedia:
+1. **anggota** - Data anggota organisasi
+2. **keuangan** - Data transaksi keuangan
+
+### Akses Firestore Console
+Pergi ke: https://console.firebase.google.com/
+
+---
+
+## 🚀 Cara Menggunakan Aplikasi
+
+### 1. Buka Aplikasi
+- **Local:** Buka `index.html` di browser
+- **Online:** https://kanza99.github.io/kta-pmii/ (setelah enable GitHub Pages)
+
+### 2. Test Fitur
+- **Input Anggota:**
+  - Klik "Input Anggota" di sidebar
+  - Isi form lengkap
+  - Klik "Simpan Data"
+  - Data akan muncul di "Data Anggota"
+
+- **Input Keuangan:**
+  - Klik "Input Keuangan" di sidebar
+  - Isi form (tanggal, keterangan, jenis, nominal)
+  - Klik "Simpan Transaksi"
+  - Data akan muncul di "Data Keuangan"
+
+- **Dashboard:**
+  - Klik "Dashboard"
+  - Lihat statistik dan grafik otomatis update
+
+### 3. Verifikasi Data
+- Buka Firebase Console
+- Firestore Database > Collections
+- Cek "anggota" dan "keuangan" collections
+- Data harus muncul real-time
+
+---
+
+## 📊 Struktur Data Firestore
+
+### Document: anggota
+```
+{
+  "nama": "Nama Anggota",
+  "kampus": "Universitas XYZ",
+  "kaderisasi": "MAPABA",
+  "organisasi": "Rayon",
+  "status": "Aktif",
+  "createdAt": "2024-03-05T12:30:45.123Z"
+}
+```
+
+### Document: keuangan
+```
+{
+  "tanggal": "2024-03-05",
+  "ket": "Iuran Anggota",
+  "jenis": "Masuk",
+  "nominal": "500000",
+  "createdAt": "2024-03-05T12:30:45.123Z"
+}
+```
+
+---
+
+## 🔧 Jika Ingin Mengganti Firebase Config
+
+Edit file `index.html` baris ~18-27:
 ```javascript
 const firebaseConfig = {
-    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-    appId: import.meta.env.VITE_FIREBASE_APP_ID
+    apiKey: "YOUR_NEW_API_KEY",
+    authDomain: "YOUR_NEW_AUTH_DOMAIN.firebaseapp.com",
+    projectId: "YOUR_NEW_PROJECT_ID",
+    storageBucket: "YOUR_NEW_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_NEW_MESSAGING_SENDER_ID",
+    appId: "YOUR_NEW_APP_ID"
 };
 ```
 
-## Langkah 6: Test Database
-1. Di index.html, browser akan menampilkan error jika config salah
-2. Coba input data anggota/keuangan
-3. Cek di Firebase Console > Firestore > Collections untuk verifikasi data tersimpan
+Kemudian save file dan reload browser.
 
-## Selesai!
-Web app Anda sudah siap dengan Firebase backend.
+---
+
+---
+
+## 🔐 Security Rules (Production)
+
+Untuk production, setup security rules ini di Firebase Console > Firestore > Rules:
+
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Izinkan reading dan writing hanya untuk user yang login
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
+```
+
+⚠️ **PENTING:** Jika aplikasi publik tanpa auth, gunakan rules yang lebih permissive atau setup authentication terlebih dahulu.
+
+---
+
+## 🐛 Troubleshooting
+
+### Error: "Resource not available" atau "Permission denied"
+- Cek Firestore Security Rules di Firebase Console
+- Gunakan rules di atas atau lebih permissive untuk testing
+
+### Data tidak tersimpan?
+- Buka browser console (F12)
+- Cek error message
+- Pastikan Firebase config benar di `index.html`
+
+### Halaman blank / error?
+- Buka `index.html` langsung di browser (tidak perlu server)
+- Check console (F12) untuk error details
+- Pastikan JavaScript enabled
+
+### Data tidak muncul di Dashboard?
+- Tunggu beberapa detik (data di-load dari Firestore)
+- Refresh halaman (F5)
+- Cek Firestore Console apakah data ada
+
+---
+
+## 📞 Support & Resources
+
+- **Firebase Documentation:** https://firebase.google.com/docs
+- **Firestore Guide:** https://firebase.google.com/docs/firestore
+- **GitHub Repo:** https://github.com/kanza99/kta-pmii
+- **Browser Console:** Tekan F12 untuk debug
+
+---
+
+**Status:** ✅ Firebase sudah siap! Aplikasi bisa digunakan sekarang.
